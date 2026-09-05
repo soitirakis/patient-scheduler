@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Booking QR Code</title>
+</head>
+<body>
+    <h1>Scan to Book an Appointment</h1>
+
+    <p>
+        <img src="{{ url_for('qr_png') }}" alt="QR code linking to the booking form">
+    </p>
+
+    <p>
+        Or open the booking form directly:
+        <a href="{{ booking_url }}">{{ booking_url }}</a>
+    </p>
+</body>
+</html>
