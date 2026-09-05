@@ -2,8 +2,9 @@ from io import BytesIO
 
 import qrcode
 from flask import Flask, redirect, render_template, request, send_file, url_for
+from openpyxl import Workbook
 
-from db import SlotTakenError, create_appointment, init_db
+from db import SlotTakenError, create_appointment, get_appointments, init_db
 
 app = Flask(__name__)
 
@@ -58,6 +59,45 @@ def qr_png():
     image.save(buffer, format="PNG")
     buffer.seek(0)
     return send_file(buffer, mimetype="image/png")
+
+
+@app.route("/export")
+def export():
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Appointments"
+
+    headers = [
+        "ID",
+        "Patient Name",
+        "Contact",
+        "Date",
+        "Time",
+        "Created At",
+    ]
+    sheet.append(headers)
+
+    for row in get_appointments():
+        sheet.append(
+            [
+                row["id"],
+                row["patient_name"],
+                row["patient_contact"],
+                row["appointment_date"],
+                row["appointment_time"],
+                row["created_at"],
+            ]
+        )
+
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name="appointments.xlsx",
+    )
 
 
 if __name__ == "__main__":

@@ -32,6 +32,23 @@ def init_db():
         conn.close()
 
 
+def get_appointments():
+    """Return all appointments ordered by date and time."""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, patient_name, patient_contact,
+                   appointment_date, appointment_time, created_at
+            FROM appointments
+            ORDER BY appointment_date, appointment_time
+            """
+        ).fetchall()
+        return rows
+    finally:
+        conn.close()
+
+
 class SlotTakenError(Exception):
     """Raised when the requested date/time slot is already booked."""
 
