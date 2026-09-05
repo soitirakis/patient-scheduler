@@ -29,6 +29,10 @@ from generate_qr import QR_PATH, generate_qr
 
 app = Flask(__name__)
 
+# Ensure the database schema exists before handling any requests, so no
+# manual setup step is needed locally or on first deploy (e.g. PythonAnywhere).
+init_db()
+
 # Staff credentials for HTTP Basic Auth on /appointments and /export.
 #
 # Locally, set these before running the app, e.g.:
