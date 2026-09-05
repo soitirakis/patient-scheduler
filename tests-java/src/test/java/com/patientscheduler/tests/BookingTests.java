@@ -33,7 +33,7 @@ public class BookingTests {
      * taken by AirPlay Receiver — change the port here to match whatever
      * `python3 app.py` actually printed on startup.
      */
-    private static final String BASE_URL = "http://127.0.0.1:5001";
+    private static final String BASE_URL = "http://127.0.0.1:5000";
 
     /**
      * Bookings persist in db.sqlite3, so a slot booked by one run cannot be
