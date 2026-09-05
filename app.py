@@ -139,11 +139,12 @@ def cancel_appointment(appointment_id):
 
 @app.route("/qr")
 def qr():
-    # Serve the generated QR image, regenerating it on the fly if it's missing
-    # so /qr always returns a working code.
+    # Render a printable page around the generated QR image, regenerating the
+    # image on the fly if it's missing so /qr always shows a working code. The
+    # PNG itself stays available at /static/qr_code.png.
     if not os.path.exists(QR_PATH):
         generate_qr()
-    return send_file(QR_PATH, mimetype="image/png")
+    return render_template("qr.html")
 
 
 @app.route("/export")
