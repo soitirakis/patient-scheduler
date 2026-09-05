@@ -1,18 +1,18 @@
 import os
 import secrets
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from functools import wraps
 from io import BytesIO
 from itertools import groupby
 
 from flask import (
     Flask,
-    Response,
     jsonify,
     redirect,
     render_template,
     request,
     send_file,
+    session,
     url_for,
 )
 from openpyxl import Workbook
@@ -29,11 +29,30 @@ from generate_qr import QR_PATH, generate_qr
 
 app = Flask(__name__)
 
+# Secret key used to sign session cookies. Set FLASK_SECRET_KEY as a
+# permanent, random value in production (e.g. via `python -c "import
+# secrets; print(secrets.token_hex(32))"`), so sessions survive app
+# restarts. If it's not set, a random key is generated on startup -- staff
+# will simply be logged out any time the app restarts.
+FLASK_SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
+
+if not FLASK_SECRET_KEY:
+    FLASK_SECRET_KEY = secrets.token_hex(32)
+    print(
+        "WARNING: FLASK_SECRET_KEY environment variable is not set. Using a "
+        "randomly generated key for this process, so all staff sessions will "
+        "be invalidated on every restart. Set a permanent FLASK_SECRET_KEY "
+        "to keep sessions persistent."
+    )
+
+app.secret_key = FLASK_SECRET_KEY
+app.permanent_session_lifetime = timedelta(minutes=30)
+
 # Ensure the database schema exists before handling any requests, so no
 # manual setup step is needed locally or on first deploy (e.g. PythonAnywhere).
 init_db()
 
-# Staff credentials for HTTP Basic Auth on /appointments and /export.
+# Staff credentials checked against the /login form.
 #
 # Locally, set these before running the app, e.g.:
 #   export STAFF_USERNAME=someusername
@@ -57,23 +76,20 @@ if not STAFF_USERNAME or not STAFF_PASSWORD:
 def require_staff_auth(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
-        auth = request.authorization
-        valid = (
-            STAFF_USERNAME
-            and STAFF_PASSWORD
-            and auth
-            and secrets.compare_digest(auth.username or "", STAFF_USERNAME)
-            and secrets.compare_digest(auth.password or "", STAFF_PASSWORD)
-        )
-        if not valid:
-            return Response(
-                "Authentication required.",
-                401,
-                {"WWW-Authenticate": 'Basic realm="Staff Area"'},
-            )
+        if not session.get("logged_in"):
+            next_url = request.full_path if request.query_string else request.path
+            return redirect(url_for("login", next=next_url))
         return view(*args, **kwargs)
 
     return wrapped
+
+
+def _safe_next_url(next_url):
+    """Only allow redirecting back to a same-site path after login, to avoid
+    an open redirect via a crafted `next` value."""
+    if next_url and next_url.startswith("/") and not next_url.startswith("//"):
+        return next_url
+    return url_for("appointments")
 
 # Bookable slots within business hours, from SLOT_START_MINUTES through
 # SLOT_END_MINUTES inclusive, spaced SLOT_INTERVAL_MINUTES apart. Adjust
@@ -191,6 +207,38 @@ def group_appointments_by_date(rows):
             }
         )
     return groups
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username", "")
+        password = request.form.get("password", "")
+        valid = (
+            STAFF_USERNAME
+            and STAFF_PASSWORD
+            and secrets.compare_digest(username, STAFF_USERNAME)
+            and secrets.compare_digest(password, STAFF_PASSWORD)
+        )
+        if valid:
+            session["logged_in"] = True
+            session.permanent = True
+            return redirect(_safe_next_url(request.form.get("next")))
+        return render_template(
+            "login.html", error="Invalid credentials.", next=request.form.get("next")
+        )
+
+    return render_template(
+        "login.html",
+        message=request.args.get("message"),
+        next=request.args.get("next"),
+    )
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login", message="You have been logged out."))
 
 
 @app.route("/appointments")
