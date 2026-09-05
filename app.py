@@ -1,10 +1,13 @@
 import os
+import secrets
 from datetime import date, datetime
+from functools import wraps
 from io import BytesIO
 from itertools import groupby
 
 from flask import (
     Flask,
+    Response,
     jsonify,
     redirect,
     render_template,
@@ -25,6 +28,48 @@ from db import (
 from generate_qr import QR_PATH, generate_qr
 
 app = Flask(__name__)
+
+# Staff credentials for HTTP Basic Auth on /appointments and /export.
+#
+# Locally, set these before running the app, e.g.:
+#   export STAFF_USERNAME=someusername
+#   export STAFF_PASSWORD=somepassword
+#   python app.py
+#
+# In production (PythonAnywhere), set STAFF_USERNAME and STAFF_PASSWORD as
+# environment variables in the "Web" tab's WSGI configuration / dashboard --
+# do not hardcode real credentials in this file or commit them anywhere.
+STAFF_USERNAME = os.environ.get("STAFF_USERNAME")
+STAFF_PASSWORD = os.environ.get("STAFF_PASSWORD")
+
+if not STAFF_USERNAME or not STAFF_PASSWORD:
+    print(
+        "WARNING: STAFF_USERNAME and/or STAFF_PASSWORD environment variables "
+        "are not set. Authentication is NOT configured and /appointments and "
+        "/export are currently UNPROTECTED."
+    )
+
+
+def require_staff_auth(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        auth = request.authorization
+        valid = (
+            STAFF_USERNAME
+            and STAFF_PASSWORD
+            and auth
+            and secrets.compare_digest(auth.username or "", STAFF_USERNAME)
+            and secrets.compare_digest(auth.password or "", STAFF_PASSWORD)
+        )
+        if not valid:
+            return Response(
+                "Authentication required.",
+                401,
+                {"WWW-Authenticate": 'Basic realm="Staff Area"'},
+            )
+        return view(*args, **kwargs)
+
+    return wrapped
 
 # Bookable slots within business hours, from SLOT_START_MINUTES through
 # SLOT_END_MINUTES inclusive, spaced SLOT_INTERVAL_MINUTES apart. Adjust
@@ -145,6 +190,7 @@ def group_appointments_by_date(rows):
 
 
 @app.route("/appointments")
+@require_staff_auth
 def appointments():
     search = request.args.get("q", "").strip()
     return render_template(
@@ -171,6 +217,7 @@ def qr():
 
 
 @app.route("/export")
+@require_staff_auth
 def export():
     workbook = Workbook()
     sheet = workbook.active
