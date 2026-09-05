@@ -30,3 +30,33 @@ def init_db():
         conn.commit()
     finally:
         conn.close()
+
+
+class SlotTakenError(Exception):
+    """Raised when the requested date/time slot is already booked."""
+
+
+def create_appointment(patient_name, patient_contact, appointment_date, appointment_time):
+    """Insert a new appointment.
+
+    Raises SlotTakenError if the date/time slot is already booked
+    (enforced by the UNIQUE constraint on appointment_date/appointment_time).
+    """
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO appointments (
+                patient_name, patient_contact, appointment_date, appointment_time
+            ) VALUES (?, ?, ?, ?)
+            """,
+            (patient_name, patient_contact, appointment_date, appointment_time),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    except sqlite3.IntegrityError:
+        raise SlotTakenError(
+            f"The slot on {appointment_date} at {appointment_time} is already booked."
+        )
+    finally:
+        conn.close()
