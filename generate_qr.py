@@ -19,7 +19,7 @@ import qrcode
 # public domain (e.g. "https://clinic.example.com/book") before printing the
 # QR code or deploying — otherwise the printed code will only work on the
 # machine running the local server.
-BOOKING_URL = "http://192.168.100.114:5000/book"
+BOOKING_URL = "https://soitirakis.pythonanywhere.com/book"
 
 # Where the generated image lives, resolved relative to this file so it works
 # regardless of the current working directory.
