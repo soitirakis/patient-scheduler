@@ -1,6 +1,7 @@
 import os
 from datetime import date, datetime
 from io import BytesIO
+from itertools import groupby
 
 from flask import (
     Flask,
@@ -121,12 +122,34 @@ def available(appointment_date):
     )
 
 
+def group_appointments_by_date(rows):
+    """Group appointment rows (already ordered by date, then time) into
+    per-day buckets for the collapsible /appointments view."""
+    groups = []
+    for appointment_date, day_rows in groupby(rows, key=lambda r: r["appointment_date"]):
+        day_rows = list(day_rows)
+        try:
+            parsed = datetime.strptime(appointment_date, "%Y-%m-%d")
+            display_date = f"{parsed.strftime('%A, %B')} {parsed.day}, {parsed.year}"
+        except ValueError:
+            display_date = appointment_date
+        groups.append(
+            {
+                "date": appointment_date,
+                "display_date": display_date,
+                "count": len(day_rows),
+                "appointments": day_rows,
+            }
+        )
+    return groups
+
+
 @app.route("/appointments")
 def appointments():
     search = request.args.get("q", "").strip()
     return render_template(
         "appointments.html",
-        appointments=get_appointments(search or None),
+        appointment_groups=group_appointments_by_date(get_appointments(search or None)),
         search=search,
     )
 
