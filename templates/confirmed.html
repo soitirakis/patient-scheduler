@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Appointment Confirmed</title>
+    <style>
+        body { font-family: sans-serif; max-width: 32rem; margin: 2rem auto; padding: 0 1rem; }
+        .confirmed { color: #0a6b2d; background: #e6f4ea; padding: 1rem; border-radius: 4px; }
+        dt { font-weight: bold; }
+        dd { margin: 0 0 0.5rem 0; }
+    </style>
+</head>
+<body>
+    <h1>Appointment Confirmed</h1>
+
+    <p class="confirmed">Your appointment has been booked. Thank you!</p>
+
+    <dl>
+        <dt>Date</dt>
+        <dd>{{ appointment_date }}</dd>
+        <dt>Time</dt>
+        <dd>{{ appointment_time }}</dd>
+    </dl>
+
+    <p><a href="{{ url_for('book') }}">Book another appointment</a></p>
+</body>
+</html>

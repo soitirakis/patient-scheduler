@@ -49,6 +49,24 @@ def get_appointments():
         conn.close()
 
 
+def get_booked_times(appointment_date):
+    """Return a list of already-booked times for the given date."""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT appointment_time
+            FROM appointments
+            WHERE appointment_date = ?
+            ORDER BY appointment_time
+            """,
+            (appointment_date,),
+        ).fetchall()
+        return [row["appointment_time"] for row in rows]
+    finally:
+        conn.close()
+
+
 def delete_appointment(appointment_id):
     """Delete an appointment by id. Returns True if a row was removed."""
     conn = get_connection()

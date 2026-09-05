@@ -1,8 +1,17 @@
 import os
+from datetime import date, datetime
 from io import BytesIO
 
 import qrcode
-from flask import Flask, redirect, render_template, request, send_file, url_for
+from flask import (
+    Flask,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from openpyxl import Workbook
 
 from db import (
@@ -10,10 +19,20 @@ from db import (
     create_appointment,
     delete_appointment,
     get_appointments,
+    get_booked_times,
     init_db,
 )
 
 app = Flask(__name__)
+
+# Bookable 30-minute slots within business hours: 09:00 through 16:30, the
+# last slot that ends by 17:00. Used both to render the form dropdown and to
+# validate submitted times.
+TIME_SLOTS = [
+    f"{hour:02d}:{minute:02d}"
+    for hour in range(9, 17)
+    for minute in (0, 30)
+]
 
 
 @app.route("/")
@@ -29,27 +48,70 @@ def book():
         appointment_date = request.form.get("appointment_date", "").strip()
         appointment_time = request.form.get("appointment_time", "").strip()
 
-        if not all([patient_name, patient_contact, appointment_date, appointment_time]):
+        def show_error(message):
             return render_template(
                 "book.html",
-                error="All fields are required.",
+                error=message,
                 form=request.form,
+                time_slots=TIME_SLOTS,
+                today=date.today().isoformat(),
+            )
+
+        if not all([patient_name, patient_contact, appointment_date, appointment_time]):
+            return show_error("All fields are required.")
+
+        try:
+            parsed_date = datetime.strptime(appointment_date, "%Y-%m-%d").date()
+        except ValueError:
+            return show_error("Please enter a valid date.")
+
+        if parsed_date < date.today():
+            return show_error("The appointment date cannot be in the past.")
+
+        if appointment_time not in TIME_SLOTS:
+            return show_error(
+                "Please choose a time on the half hour between 09:00 and 16:30."
             )
 
         try:
             create_appointment(
                 patient_name, patient_contact, appointment_date, appointment_time
             )
-        except SlotTakenError as exc:
-            return render_template(
-                "book.html",
-                error=str(exc),
-                form=request.form,
+        except SlotTakenError:
+            return show_error(
+                "This time slot is already booked. Please choose another."
             )
 
-        return redirect(url_for("book", booked=1))
+        return redirect(
+            url_for(
+                "book_confirmed", date=appointment_date, time=appointment_time
+            )
+        )
 
-    return render_template("book.html", booked=request.args.get("booked"))
+    return render_template(
+        "book.html",
+        time_slots=TIME_SLOTS,
+        today=date.today().isoformat(),
+    )
+
+
+@app.route("/book/confirmed")
+def book_confirmed():
+    return render_template(
+        "confirmed.html",
+        appointment_date=request.args.get("date"),
+        appointment_time=request.args.get("time"),
+    )
+
+
+@app.route("/available/<appointment_date>")
+def available(appointment_date):
+    return jsonify(
+        {
+            "date": appointment_date,
+            "booked_times": get_booked_times(appointment_date),
+        }
+    )
 
 
 @app.route("/appointments")
