@@ -4,7 +4,12 @@ import qrcode
 from flask import Flask, redirect, render_template, request, send_file, url_for
 from openpyxl import Workbook
 
-from db import SlotTakenError, create_appointment, get_appointments, init_db
+from db import (
+    SlotTakenError,
+    create_appointment,
+    get_appointments,
+    init_db,
+)
 
 app = Flask(__name__)
 
@@ -43,6 +48,11 @@ def book():
         return redirect(url_for("book", booked=1))
 
     return render_template("book.html", booked=request.args.get("booked"))
+
+
+@app.route("/appointments")
+def appointments():
+    return render_template("appointments.html", appointments=get_appointments())
 
 
 @app.route("/qr")
