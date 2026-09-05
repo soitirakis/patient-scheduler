@@ -22,11 +22,20 @@
         .qr { width: 350px; height: 350px; }
         .hint { font-size: 1rem; color: #555; margin-top: 2rem; }
 
-        /* Print layout: drop on-screen-only helpers and browser-added
-           headers/footers so the page prints as a clean centered sign. */
+        /* Print layout: physical sizing so one sheet becomes a readable
+           door sign. Chrome's paginated layout gives body no definite
+           height, so flex can't center vertically -- instead the elements
+           are sized in cm to fill the sheet from the top. Values are scaled
+           off the 10cm QR and fit A4 (19x27.7cm inside the margins). */
         @media print {
             @page { margin: 1cm; }
-            body { padding: 0; min-height: auto; }
+            body { padding: 2.5cm 0 0 0; min-height: auto; }
+            h1 { font-size: 2.6cm; margin: 0 0 1.5cm 0; }
+            .doctor { font-size: 1.5cm; margin: 0 0 0.8cm 0; }
+            .hours { font-size: 1.2cm; margin: 0 0 3cm 0; }
+            /* Upscaling a ~370px PNG to 10cm; keep the module edges hard
+               so the code stays crisp and scannable instead of blurring. */
+            .qr { width: 10cm; height: 10cm; image-rendering: pixelated; }
             .hint { display: none; }
         }
     </style>
