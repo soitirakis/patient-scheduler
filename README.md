@@ -46,6 +46,5 @@ PORT=5001 python app.py
 | `/available/<date>` | JSON list of booked times for the given date. |
 | `/appointments` | List booked appointments; `?q=` filters by name, contact, or date. |
 | `/appointments/<id>/cancel` | Cancel an appointment (POST).      |
-| `/qr`      | Page displaying a QR code linking to `/book`.      |
-| `/qr.png`  | The QR code image itself (PNG).                    |
+| `/qr`      | QR code image (PNG) linking to `/book`, generated on the fly. |
 | `/export`  | Download all appointments as `appointments.xlsx`.  |

@@ -2,7 +2,6 @@ import os
 from datetime import date, datetime
 from io import BytesIO
 
-import qrcode
 from flask import (
     Flask,
     jsonify,
@@ -137,16 +136,6 @@ def qr():
     if not os.path.exists(QR_PATH):
         generate_qr()
     return send_file(QR_PATH, mimetype="image/png")
-
-
-@app.route("/qr.png")
-def qr_png():
-    booking_url = url_for("book", _external=True)
-    image = qrcode.make(booking_url)
-    buffer = BytesIO()
-    image.save(buffer, format="PNG")
-    buffer.seek(0)
-    return send_file(buffer, mimetype="image/png")
 
 
 @app.route("/export")
