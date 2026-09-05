@@ -20,3 +20,7 @@ db.sqlite3
 
 # macOS
 .DS_Store
+
+# Generated QR code (regenerated per deployment, not committed)
+qr_code.png
+static/qr_code.png

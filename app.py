@@ -22,6 +22,7 @@ from db import (
     get_booked_times,
     init_db,
 )
+from generate_qr import QR_PATH, generate_qr
 
 app = Flask(__name__)
 
@@ -131,8 +132,11 @@ def cancel_appointment(appointment_id):
 
 @app.route("/qr")
 def qr():
-    booking_url = url_for("book", _external=True)
-    return render_template("qr.html", booking_url=booking_url)
+    # Serve the generated QR image, regenerating it on the fly if it's missing
+    # so /qr always returns a working code.
+    if not os.path.exists(QR_PATH):
+        generate_qr()
+    return send_file(QR_PATH, mimetype="image/png")
 
 
 @app.route("/qr.png")
