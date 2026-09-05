@@ -1,0 +1,32 @@
+import sqlite3
+
+DB_PATH = "db.sqlite3"
+
+
+def get_connection():
+    """Return a SQLite connection with row access by column name."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    """Create the database schema if it does not already exist."""
+    conn = get_connection()
+    try:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS appointments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                patient_name TEXT NOT NULL,
+                patient_contact TEXT NOT NULL,
+                appointment_date TEXT NOT NULL,
+                appointment_time TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (appointment_date, appointment_time)
+            )
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
