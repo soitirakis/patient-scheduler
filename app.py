@@ -25,13 +25,12 @@ from db import (
 
 app = Flask(__name__)
 
-# Bookable 30-minute slots within business hours: 09:00 through 16:30, the
-# last slot that ends by 17:00. Used both to render the form dropdown and to
-# validate submitted times.
+# Bookable 30-minute slots within business hours, 09:00 through 17:00
+# inclusive. Used both to render the form dropdown and to validate
+# submitted times.
 TIME_SLOTS = [
-    f"{hour:02d}:{minute:02d}"
-    for hour in range(9, 17)
-    for minute in (0, 30)
+    f"{minutes // 60:02d}:{minutes % 60:02d}"
+    for minutes in range(9 * 60, 17 * 60 + 1, 30)
 ]
 
 
@@ -70,7 +69,7 @@ def book():
 
         if appointment_time not in TIME_SLOTS:
             return show_error(
-                "Please choose a time on the half hour between 09:00 and 16:30."
+                "Please choose a time on the half hour between 09:00 and 17:00."
             )
 
         try:
