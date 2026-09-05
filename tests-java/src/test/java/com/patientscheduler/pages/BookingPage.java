@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -84,8 +85,25 @@ public class BookingPage {
         return this;
     }
 
+    /**
+     * Clicks Book and waits for the resulting page load to finish.
+     *
+     * <p>A rejected submission re-renders /book, so the URL is unchanged and
+     * there is nothing to wait on by address. Waiting for the old document to
+     * go stale is what makes the difference observable; without it, assertions
+     * can read the pre-submit page and see no error. When the browser's own
+     * HTML5 validation blocks the submit no navigation happens at all, so the
+     * timeout is expected and swallowed.
+     */
     public BookingPage submit() {
+        WebElement oldDocument = driver.findElement(By.tagName("html"));
         driver.findElement(SUBMIT_BUTTON).click();
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(5))
+                    .until(ExpectedConditions.stalenessOf(oldDocument));
+        } catch (TimeoutException e) {
+            // Submission was blocked client-side; the form is still on screen.
+        }
         return this;
     }
 
