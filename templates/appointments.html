@@ -13,6 +13,19 @@
         <a href="{{ url_for('export') }}">Export to Excel</a>
     </p>
 
+    <form method="get" action="{{ url_for('appointments') }}">
+        <input type="text" name="q" value="{{ search }}"
+               placeholder="Search by name, contact, or date">
+        <button type="submit">Search</button>
+        {% if search %}
+        <a href="{{ url_for('appointments') }}">Clear</a>
+        {% endif %}
+    </form>
+
+    {% if search %}
+    <p>Showing results for "{{ search }}".</p>
+    {% endif %}
+
     {% if appointments %}
     <table border="1" cellpadding="6" cellspacing="0">
         <thead>
@@ -46,6 +59,8 @@
             {% endfor %}
         </tbody>
     </table>
+    {% elif search %}
+    <p>No appointments match your search.</p>
     {% else %}
     <p>No appointments booked yet.</p>
     {% endif %}

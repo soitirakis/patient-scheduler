@@ -115,7 +115,12 @@ def available(appointment_date):
 
 @app.route("/appointments")
 def appointments():
-    return render_template("appointments.html", appointments=get_appointments())
+    search = request.args.get("q", "").strip()
+    return render_template(
+        "appointments.html",
+        appointments=get_appointments(search or None),
+        search=search,
+    )
 
 
 @app.route("/appointments/<int:appointment_id>/cancel", methods=["POST"])

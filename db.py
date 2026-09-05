@@ -32,18 +32,30 @@ def init_db():
         conn.close()
 
 
-def get_appointments():
-    """Return all appointments ordered by date and time."""
+def get_appointments(search=None):
+    """Return appointments ordered by date and time.
+
+    If ``search`` is given, only appointments whose name, contact, or date
+    contains that text (case-insensitive) are returned.
+    """
     conn = get_connection()
     try:
-        rows = conn.execute(
-            """
+        query = """
             SELECT id, patient_name, patient_contact,
                    appointment_date, appointment_time, created_at
             FROM appointments
-            ORDER BY appointment_date, appointment_time
+        """
+        params = ()
+        if search:
+            query += """
+            WHERE patient_name LIKE ?
+               OR patient_contact LIKE ?
+               OR appointment_date LIKE ?
             """
-        ).fetchall()
+            like = f"%{search}%"
+            params = (like, like, like)
+        query += " ORDER BY appointment_date, appointment_time"
+        rows = conn.execute(query, params).fetchall()
         return rows
     finally:
         conn.close()
