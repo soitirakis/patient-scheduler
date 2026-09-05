@@ -13,13 +13,11 @@ import os
 
 import qrcode
 
-# The booking page URL encoded in the QR code.
-#
-# This defaults to the local dev server for testing. CHANGE THIS to your real
-# public domain (e.g. "https://clinic.example.com/book") before printing the
-# QR code or deploying — otherwise the printed code will only work on the
-# machine running the local server.
-BOOKING_URL = "https://soitirakis.pythonanywhere.com/book"
+from config import BASE_URL
+
+# The booking page URL encoded in the QR code. Derived from the shared
+# BASE_URL constant so the app and the QR generator can never drift apart.
+BOOKING_URL = f"{BASE_URL}/book"
 
 # Where the generated image lives, resolved relative to this file so it works
 # regardless of the current working directory.
