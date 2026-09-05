@@ -28,6 +28,12 @@ python app.py
 
 The app will start on http://127.0.0.1:5000/ and initialize the SQLite database (`db.sqlite3`) on first run.
 
+To run on a different port (e.g. if port 5000 is already in use, as it is by AirPlay Receiver on macOS), set the `PORT` environment variable:
+
+```bash
+PORT=5001 python app.py
+```
+
 ## Routes
 
 | Route      | Description                                        |

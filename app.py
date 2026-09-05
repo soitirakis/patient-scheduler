@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 
 import qrcode
@@ -112,4 +113,5 @@ def export():
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, port=port)
