@@ -25,12 +25,19 @@ from generate_qr import QR_PATH, generate_qr
 
 app = Flask(__name__)
 
-# Bookable 30-minute slots within business hours, 09:00 through 17:00
-# inclusive. Used both to render the form dropdown and to validate
-# submitted times.
+# Bookable slots within business hours, from SLOT_START_MINUTES through
+# SLOT_END_MINUTES inclusive, spaced SLOT_INTERVAL_MINUTES apart. Adjust
+# these three values to change the schedule. Used both to render the form
+# dropdown and to validate submitted times.
+SLOT_START_MINUTES = 14 * 60
+SLOT_END_MINUTES = 15 * 60
+SLOT_INTERVAL_MINUTES = 10
+
 TIME_SLOTS = [
     f"{minutes // 60:02d}:{minutes % 60:02d}"
-    for minutes in range(9 * 60, 17 * 60 + 1, 30)
+    for minutes in range(
+        SLOT_START_MINUTES, SLOT_END_MINUTES + 1, SLOT_INTERVAL_MINUTES
+    )
 ]
 
 
@@ -69,7 +76,8 @@ def book():
 
         if appointment_time not in TIME_SLOTS:
             return show_error(
-                "Please choose a time on the half hour between 09:00 and 17:00."
+                f"Please choose a time in {SLOT_INTERVAL_MINUTES}-minute "
+                f"increments between {TIME_SLOTS[0]} and {TIME_SLOTS[-1]}."
             )
 
         try:
