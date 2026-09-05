@@ -8,6 +8,7 @@ from openpyxl import Workbook
 from db import (
     SlotTakenError,
     create_appointment,
+    delete_appointment,
     get_appointments,
     init_db,
 )
@@ -54,6 +55,12 @@ def book():
 @app.route("/appointments")
 def appointments():
     return render_template("appointments.html", appointments=get_appointments())
+
+
+@app.route("/appointments/<int:appointment_id>/cancel", methods=["POST"])
+def cancel_appointment(appointment_id):
+    delete_appointment(appointment_id)
+    return redirect(url_for("appointments"))
 
 
 @app.route("/qr")

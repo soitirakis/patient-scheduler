@@ -7,6 +7,7 @@ A simple patient scheduling web app built with Flask and SQLite.
 - **Booking form** — patients enter their name, contact, date, and time.
 - **Double-booking prevention** — a UNIQUE constraint on date/time blocks conflicting bookings at the database level.
 - **Appointment list** — view all booked appointments in a table.
+- **Cancellation** — cancel a booking from the appointment list, freeing its slot.
 - **QR code** — a scannable code that links directly to the booking form.
 - **Excel export** — download all appointments as an `.xlsx` file.
 
@@ -41,6 +42,7 @@ PORT=5001 python app.py
 | `/`        | Health check (returns `OK`).                       |
 | `/book`    | Booking form (GET to view, POST to submit).        |
 | `/appointments` | List all booked appointments in a table.      |
+| `/appointments/<id>/cancel` | Cancel an appointment (POST).      |
 | `/qr`      | Page displaying a QR code linking to `/book`.      |
 | `/qr.png`  | The QR code image itself (PNG).                    |
 | `/export`  | Download all appointments as `appointments.xlsx`.  |

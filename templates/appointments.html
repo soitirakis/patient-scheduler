@@ -23,6 +23,7 @@
                 <th>Date</th>
                 <th>Time</th>
                 <th>Created At</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -34,6 +35,13 @@
                 <td>{{ appt.appointment_date }}</td>
                 <td>{{ appt.appointment_time }}</td>
                 <td>{{ appt.created_at }}</td>
+                <td>
+                    <form method="post"
+                          action="{{ url_for('cancel_appointment', appointment_id=appt.id) }}"
+                          onsubmit="return confirm('Cancel this appointment?');">
+                        <button type="submit">Cancel</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

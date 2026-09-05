@@ -49,6 +49,19 @@ def get_appointments():
         conn.close()
 
 
+def delete_appointment(appointment_id):
+    """Delete an appointment by id. Returns True if a row was removed."""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM appointments WHERE id = ?", (appointment_id,)
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()
+
+
 class SlotTakenError(Exception):
     """Raised when the requested date/time slot is already booked."""
 
